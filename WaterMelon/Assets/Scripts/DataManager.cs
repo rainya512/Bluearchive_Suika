@@ -16,10 +16,6 @@ public class DataManager : MonoBehaviour
             {
                 PlayerPrefs.SetInt(elem, 0);
             }
-            else if (elem == "currGameMod")
-            {
-                PlayerPrefs.SetInt(elem, 0);
-            }
         }
 
         PlayerPrefs.SetFloat("volumeBGM", 0.3f);

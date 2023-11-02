@@ -70,14 +70,20 @@ public class Balls : MonoBehaviour
     {
         if (collision.CompareTag("Finish"))
         {
+            deadtime += Time.deltaTime;
+
             if (manager.isHard)
             {
-                spr.color = new Color(0.9f, 0.2f, 0.2f);
-                manager.Dead();
+                if (deadtime > 0.5)
+                {
+                    spr.color = new Color(0.9f, 0.2f, 0.2f);
+                    manager.Dead();
+                }
+
             }
             else
             {
-                deadtime += Time.deltaTime;
+
 
                 if (deadtime > 2)
                 {
@@ -88,7 +94,6 @@ public class Balls : MonoBehaviour
                     manager.Dead();
                 }
             }
-
         }
     }
 
@@ -215,7 +220,7 @@ public class Balls : MonoBehaviour
             yield return null;
         }
 
-        manager.score += (level + 1);
+        manager.score += level + 1;
 
         is_merge = false;
         gameObject.SetActive(false);

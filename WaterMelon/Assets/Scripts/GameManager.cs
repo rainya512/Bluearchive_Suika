@@ -21,7 +21,6 @@ public class GameManager : MonoBehaviour
     public Balls lastball;
 
     [Header("----------[core]")]
-    public Data savedFile;
     public int score;
     public int spawn_level;
     public int max_level;
@@ -32,7 +31,7 @@ public class GameManager : MonoBehaviour
     public bool is_play;
     public bool is_over;
     public bool play_attach_sound;
-    public string path;
+    DataManager dataManager;
 
     [Header("----------[audio]")]
     public AudioSource bgmPlayer;
@@ -79,18 +78,16 @@ public class GameManager : MonoBehaviour
     [Header("texts")]
     public Text extra_text;
     public Text current_score;
-    public Text max_score;
+    public Text[] max_score;
     public Text mode;
     public Text subtext;
-    public Text subtext_max;
-    public Text main_max;
-    public Text main_maxEX;
     public Text WarnText;
     public Text new_best;
 
     [Header("----------[etc.]")]
     public GameObject Line;
     public GameObject Plane;
+    public bool detLine;
 
     Balls Allocate_ball()
     {
@@ -148,66 +145,18 @@ public class GameManager : MonoBehaviour
         next();
     }
 
-    void InitializeData(string path, bool resetData = false)
-    {
-        //playerprefs initialization
-        string[] playerprefKeys = { "IsMuted_bgm", "IsMuted_sfx", "IsMuted_attach", "currGameMod" };
-
-        foreach (var elem in playerprefKeys)
-        {
-            if (!PlayerPrefs.HasKey(elem) || resetData)
-            {
-                PlayerPrefs.SetInt(elem, 0);
-            }
-        }
-
-        PlayerPrefs.SetFloat("volumeBGM", 0.3f);
-        PlayerPrefs.SetFloat("volumeSFX", 1f);
-
-        //json file initialization
-        if (!File.Exists(path + "data") || resetData)
-        {
-            Debug.Log("Initialization Activated");
-
-            Data playerData = new Data()
-            {
-                highScores = new int[] { 0, 0, 0, 0 },
-                unlockEX = false,
-                unlockHard = false,
-                unlockHardEX = false
-            };
-
-            Save(playerData);
-        }
-
-        savedFile = Load();
-    }
-
-    void Save(Data data)
-    {
-        string jsonData = JsonUtility.ToJson(data);
-        File.WriteAllText(path + "data", jsonData);
-    }
-
-    Data Load()
-    {
-        string data = File.ReadAllText(path + "data");
-        return JsonUtility.FromJson<Data>(data);
-    }
-
     void Awake()
     {
         Application.targetFrameRate = 60;
         pool_ball = new List<Balls>();
         pool_eff = new List<ParticleSystem>();
+
         for (int i = 0; i < pool_size; i++)
         {
             Allocate_ball();
         }
 
-        path = Application.persistentDataPath + "/";
-        print(path);
-        InitializeData(path);
+        dataManager = gameObject.GetComponent<DataManager>();
     }
 
     void Start()
@@ -216,17 +165,22 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 1.25f;
         Time.fixedDeltaTime = 0.02f * Time.timeScale;
 
-        main_max.text = savedFile.highScores[0].ToString();
-        main_maxEX.text = savedFile.highScores[1].ToString();
-
         StartCoroutine(EnableIcon_bgm());
         StartCoroutine(EnableIcon_sfx());
         StartCoroutine(EnableIcon_attach());
 
-        if (PlayerPrefs.GetInt("currGameMod") != 0)
+        max_score[0].text = dataManager.saveFile.highScores[0].ToString();
+        max_score[1].text = dataManager.saveFile.highScores[1].ToString();
+
+        if (!is_play)
+        {
+            PlayerPrefs.SetInt("currGameMod", 0);
+        }
+        else if (is_over)
         {
             GameStart();
         }
+
     }
 
     public void SelectMode0()
@@ -254,14 +208,12 @@ public class GameManager : MonoBehaviour
 
         switch (PlayerPrefs.GetInt("currGameMod"))
         {
-            case 1:
-                max_score.text = savedFile.highScores[0].ToString();
-                break;
             case 2:
-                if (savedFile.unlockEX)
+                if (dataManager.saveFile.unlockEX)
                 {
-                    max_score.text = savedFile.highScores[1].ToString();
                     isEX = true;
+                    mode.gameObject.SetActive(true);
+                    mode.text = "EXTRA";
                 }
                 else
                 {
@@ -270,10 +222,11 @@ public class GameManager : MonoBehaviour
                 }
                 break;
             case 3:
-                if (savedFile.unlockHard)
+                if (dataManager.saveFile.unlockHard)
                 {
-                    max_score.text = savedFile.highScores[2].ToString();
                     isHard = true;
+                    mode.gameObject.SetActive(true);
+                    mode.text = "HARD";
                 }
                 else
                 {
@@ -282,11 +235,12 @@ public class GameManager : MonoBehaviour
                 }
                 break;
             case 4:
-                if (savedFile.unlockHard && savedFile.unlockHardEX)
+                if (dataManager.saveFile.unlockHard && dataManager.saveFile.unlockHardEX)
                 {
-                    max_score.text = savedFile.highScores[3].ToString();
                     isEX = true;
                     isHard = true;
+                    mode.gameObject.SetActive(true);
+                    mode.text = "INSANE";
                 }
                 else
                 {
@@ -298,14 +252,19 @@ public class GameManager : MonoBehaviour
                 break;
         }
 
+        currentMode = PlayerPrefs.GetInt("currGameMod");
         Line.SetActive(true);
         Plane.SetActive(true);
         current_score.gameObject.SetActive(true);
-        max_score.gameObject.SetActive(true);
+        max_score[4].gameObject.SetActive(true);
+        max_score[4].text = dataManager.saveFile.highScores[currentMode - 1].ToString();
         pause.gameObject.SetActive(true);
         start_group[0].SetActive(false);
         is_play = true;
-        currentMode = PlayerPrefs.GetInt("currGameMod");
+        is_over = false;
+        score = 0;
+        max_level = 0;
+        spawn_level = 0;
         bgmPlayer.Play();
         Invoke("next", 1.5f);
         StartCoroutine(molru());
@@ -418,24 +377,28 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(1);
 
 
-        if (score > savedFile.highScores[currentMode - 1])
+        if (score > dataManager.saveFile.highScores[currentMode - 1])
         {
-            savedFile.highScores[currentMode - 1] = score;
+            dataManager.saveFile.highScores[currentMode - 1] = score;
             new_best.gameObject.SetActive(true);
         }
-        subtext_max.text = savedFile.highScores[currentMode - 1].ToString();
+
+
+        is_play = false;
 
         current_score.gameObject.SetActive(false);
-        max_score.gameObject.SetActive(false);
-        subtext.text = current_score.text;
+        max_score[4].gameObject.SetActive(false);
         Plane.SetActive(false);
         Line.SetActive(false);
         mode.gameObject.SetActive(false);
         pause.gameObject.SetActive(false);
         end_group.SetActive(true);
-        is_play = false;
+
+        subtext.text = current_score.text;
+        max_score[5].text = dataManager.saveFile.highScores[currentMode - 1].ToString();
+
         bgmPlayer.Stop();
-        Save(savedFile);
+        dataManager.Save(dataManager.saveFile);
         sfxPlay(sfx.End);
     }
 
@@ -505,7 +468,7 @@ public class GameManager : MonoBehaviour
     public void Reset_data()
     {
         sfxPlay(sfx.Click);
-        InitializeData(path, true);
+        dataManager.InitializeData(dataManager.path, true);
         reset();
     }
 
@@ -525,11 +488,17 @@ public class GameManager : MonoBehaviour
         {
             start_group[1].SetActive(false);
             start_group[2].SetActive(true);
+
+            max_score[2].text = dataManager.saveFile.highScores[2].ToString();
+            max_score[3].text = dataManager.saveFile.highScores[3].ToString();
         }
         else
         {
             start_group[2].SetActive(false);
             start_group[1].SetActive(true);
+
+            max_score[0].text = dataManager.saveFile.highScores[0].ToString();
+            max_score[1].text = dataManager.saveFile.highScores[1].ToString();
         }
     }
 
@@ -537,7 +506,6 @@ public class GameManager : MonoBehaviour
     {
         Time.timeScale = 1.25f;
         Time.fixedDeltaTime = 0.02f * Time.timeScale;
-        PlayerPrefs.SetInt("currGameMod", 0);
         SceneManager.LoadScene("Game");
     }
 
@@ -549,14 +517,14 @@ public class GameManager : MonoBehaviour
             {
                 if (!isHard)
                 {
-                    savedFile.unlockEX = true;
-                    savedFile.unlockHard = true;
+                    dataManager.saveFile.unlockEX = true;
+                    dataManager.saveFile.unlockHard = true;
                 }
                 else
                 {
-                    savedFile.unlockHardEX = true;
+                    dataManager.saveFile.unlockHardEX = true;
                 }
-                Save(savedFile);
+                dataManager.Save(dataManager.saveFile);
 
                 yield return new WaitForSeconds(0.5f);
                 sfxPlay(sfx.Tada);
@@ -746,14 +714,7 @@ public class GameManager : MonoBehaviour
 
     public void Restart()
     {
-        SceneManager.LoadScene("Game");
+        end_group.gameObject.SetActive(false);
+        GameStart();
     }
-}
-
-public class Data
-{
-    public int[] highScores;
-    public bool unlockEX;
-    public bool unlockHard;
-    public bool unlockHardEX;
 }
