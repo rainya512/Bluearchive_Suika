@@ -1340,6 +1340,7 @@ MonoBehaviour:
   AttachMute_off: {fileID: 1039845991}
   pause_AttachMute_on: {fileID: 273136376}
   pause_AttachMute_off: {fileID: 1627729430}
+  changeButton: {fileID: 1550164260}
   Bgm_slider: {fileID: 769025590}
   pause_Bgm_slider: {fileID: 1403493556}
   Sfx_slider: {fileID: 951370150}
@@ -1359,6 +1360,8 @@ MonoBehaviour:
   new_best: {fileID: 1930845851}
   Line: {fileID: 788263464}
   Plane: {fileID: 2128053867}
+  normalImage: {fileID: 21300000, guid: 831a6d40fae95a248ab4108edfd3e123, type: 3}
+  hardImage: {fileID: 21300000, guid: 124ccfadebcd7424a989f87495e38a78, type: 3}
   detLine: 0
 --- !u!114 &320215345
 MonoBehaviour:
@@ -3625,7 +3628,6 @@ GameObject:
   - component: {fileID: 788263466}
   - component: {fileID: 788263465}
   - component: {fileID: 788263467}
-  - component: {fileID: 788263468}
   m_Layer: 0
   m_Name: Line
   m_TagString: Finish
@@ -3726,19 +3728,6 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 8, y: 0.3508504}
   m_EdgeRadius: 0
---- !u!114 &788263468
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 788263464}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fa726f9924e3bf946a04ce7a0fcd4849, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  manager: {fileID: 320215344}
 --- !u!1 &819086275
 GameObject:
   m_ObjectHideFlags: 0
@@ -13657,7 +13646,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 62a2c25384cc6de4aa2cd23a36180cbe, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 831a6d40fae95a248ab4108edfd3e123, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

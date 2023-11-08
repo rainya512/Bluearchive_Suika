@@ -67,7 +67,7 @@ public class GameManager : MonoBehaviour
     public Button AttachMute_off;
     public Button pause_AttachMute_on;
     public Button pause_AttachMute_off;
-
+    public Button changeButton;
 
     [Header("slider")]
     public Slider Bgm_slider;
@@ -87,6 +87,8 @@ public class GameManager : MonoBehaviour
     [Header("----------[etc.]")]
     public GameObject Line;
     public GameObject Plane;
+    public Sprite normalImage;
+    public Sprite hardImage;
     public bool detLine;
 
     Balls Allocate_ball()
@@ -157,6 +159,7 @@ public class GameManager : MonoBehaviour
         }
 
         dataManager = gameObject.GetComponent<DataManager>();
+        changeButton.image = GetComponent<Image>();
     }
 
     void Start()
@@ -484,8 +487,11 @@ public class GameManager : MonoBehaviour
     public void changeMode()
     {
         sfxPlay(sfx.Click);
+
         if (start_group[1].activeSelf)
         {
+            changeButton.image.sprite = hardImage;
+
             start_group[1].SetActive(false);
             start_group[2].SetActive(true);
 
@@ -494,6 +500,8 @@ public class GameManager : MonoBehaviour
         }
         else
         {
+            changeButton.image.sprite = normalImage;
+
             start_group[2].SetActive(false);
             start_group[1].SetActive(true);
 
